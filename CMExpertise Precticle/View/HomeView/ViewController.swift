@@ -29,10 +29,33 @@ class ViewController: UIViewController {
         viewModel.$list.sink {[weak self] list in
             self?.refresData(data: list)
         }.store(in: &bag)
+        setUpNavigationBar()
         setUpData()
     }
 
     //MARK: - Custom Method
+    func setUpNavigationBar() {
+        let navBar = UINavigationBar()
+        navBar.translatesAutoresizingMaskIntoConstraints = false
+        let navItem = UINavigationItem(title: "Wethor data")
+        navBar.setItems([navItem], animated: false)
+        view.addSubview(navBar)
+
+        NSLayoutConstraint.activate([
+            navBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            navBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            navBar.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+
+        tblWeather.translatesAutoresizingMaskIntoConstraints = false
+        if let topConstraint = view.constraints.first(where: {
+            ($0.firstItem as? UITableView) == tblWeather && $0.firstAttribute == .top
+        }) {
+            view.removeConstraint(topConstraint)
+        }
+        tblWeather.topAnchor.constraint(equalTo: navBar.bottomAnchor).isActive = true
+    }
+
     func setUpData() {
         setTableView()
 //        getWeatherData()
