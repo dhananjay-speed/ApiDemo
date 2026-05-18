@@ -11,7 +11,7 @@ class WeatherResModel: Decodable {
     let cod: String?
     let message: Int?
     let cnt: Int?
-    let list: [List]?
+    let list: [WeatherListItem]?
 
     private enum CodingKeys: String, CodingKey {
         case cod = "cod"
@@ -25,12 +25,12 @@ class WeatherResModel: Decodable {
         cod = try? values.decodeIfPresent(String.self, forKey: .cod)
         message = try? values.decodeIfPresent(Int.self, forKey: .message)
         cnt = try? values.decodeIfPresent(Int.self, forKey: .cnt)
-        list = try? values.decodeIfPresent([List].self, forKey: .list)
+        list = try? values.decodeIfPresent([WeatherListItem].self, forKey: .list)
     }
 
 }
 
-class List: Decodable {
+class WeatherListItem: Decodable {
 
     let dt: Int?
     let main: Main?

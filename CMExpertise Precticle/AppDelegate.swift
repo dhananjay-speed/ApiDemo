@@ -1,19 +1,17 @@
 //
-//  AppDelegate.swift
+//  CMExpertisePrecticleApp.swift
 //  CMExpertise Precticle
 //
 //  Created by Dhananjay chauhan on 31/03/24.
 //
 
-import UIKit
+import SwiftUI
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    var window: UIWindow?
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-        return true
+struct CMExpertisePrecticleApp: App {
+    var body: some Scene {
+        WindowGroup {
+            HomeView()
+        }
     }
 }
-

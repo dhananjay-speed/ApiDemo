@@ -7,51 +7,49 @@
 
 import Foundation
 import Combine
-class WeatherDataViewModel: ObservableObject {
-    
-    @Published var list: WeatherResModel?
-    
-    private var cancalable = Set<AnyCancellable>()
-    
-    deinit {
-        cancalable.forEach({$0.cancel()})
-    }
-    
-    func callWebServiceToGetWeather(apiCompletion: @escaping ((WeatherResModel?)->Void)){
-        WebService().apiToGetData(resModel: WeatherResModel.self, url: APIKeys.whether.rawValue) { date in
-            switch date {
-            case .success(let responce):
-                apiCompletion(responce)
-            case .failure(_):
-                break
-            }
-        }
-    }
-    
-    //Get data using combine
-    func callWebServiceToGetData(){
-        WebService().apiToGetDataToCombine(resModel: WeatherResModel.self, url: APIKeys.whether.rawValue).sink { complition in
-            switch complition {
-            case .finished:
-                print("result is ")
-            case .failure(let failure):
-                print("api fail",failure.localizedDescription)
-            }
-        } receiveValue: { data in
-            print("dayta = ",data.list?.count ?? 0)
-            self.list = data
-        }.store(in: &cancalable)
 
+struct WeatherDay: Identifiable {
+    let id = UUID()
+    let date: String
+    let items: [WeatherListItem]
+}
+
+@MainActor
+final class WeatherDataViewModel: ObservableObject {
+
+    @Published private(set) var days: [WeatherDay] = []
+    @Published private(set) var isLoading: Bool = false
+    @Published private(set) var errorMessage: String?
+
+    private let service: WebService
+
+    init(service: WebService = WebService()) {
+        self.service = service
     }
-    
-    func getDataWithAwait() async -> WeatherResModel? {
-        let result = await WebService().getDataWithWait(resModel: WeatherResModel.self, url: APIKeys.whether.rawValue)
+
+    func loadWeather() async {
+        isLoading = true
+        errorMessage = nil
+        let result = await service.getDataWithWait(resModel: WeatherResModel.self, url: APIKeys.whether.rawValue)
+        isLoading = false
         switch result {
-        case .success(let success):
-            return success
-        case .failure(_):
-            return nil
+        case .success(let response):
+            days = group(response)
+        case .failure(let error):
+            errorMessage = error.localizedDescription
         }
     }
-    
+
+    private func group(_ response: WeatherResModel?) -> [WeatherDay] {
+        var buckets: [(date: String, items: [WeatherListItem])] = []
+        for item in response?.list ?? [] {
+            let date = item.dtTxt?.getDate() ?? ""
+            if let index = buckets.firstIndex(where: { $0.date == date }) {
+                buckets[index].items.append(item)
+            } else {
+                buckets.append((date: date, items: [item]))
+            }
+        }
+        return buckets.map { WeatherDay(date: $0.date, items: $0.items) }
+    }
 }
